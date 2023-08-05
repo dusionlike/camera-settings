@@ -1,0 +1,36 @@
+{
+  "name": "camera-settings",
+  "version": "0.0.1",
+  "description": "Modify the configuration of the usb camera",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "binding.gyp",
+    "include/",
+    "src/",
+    "index.js",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "build:debug": "node-gyp configure && node-gyp build --debug",
+    "build:release": "node-gyp configure && node-gyp build",
+    "rebuild": "node-gyp rebuild",
+    "clean": "node-gyp clean",
+    "test": "node test"
+  },
+  "keywords": [
+    "camera",
+    "settings",
+    "control",
+    "capture",
+    "electron"
+  ],
+  "author": "dusionlike",
+  "license": "MIT",
+  "dependencies": {
+    "bindings": "^1.5.0"
+  },
+  "devDependencies": {
+    "node-addon-api": "^7.0.0"
+  }
+}
