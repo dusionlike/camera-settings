@@ -1,3 +1,4 @@
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #include "win/camera_settings.h"
 
 HRESULT QueryAllInterface(const WCHAR *wszName, IAMVideoProcAmp **ppProcAmp, IAMCameraControl **ppCameraControl)
@@ -217,3 +218,5 @@ void SetCameraSettings(const WCHAR *wszName, const std::vector<CameraSettingSett
 
   CoUninitialize();
 }
+#else
+#endif

@@ -1,5 +1,5 @@
 #include <napi.h>
-#include "win/camera_settings.h"
+#include "camera_settings_base.h"
 
 Napi::Object GetSetting(Napi::Env env, CameraSetting setting)
 {
@@ -26,7 +26,7 @@ Napi::Value N_GetCameraSettings(const Napi::CallbackInfo &info)
     std::wstring wCameraName = std::wstring(cameraName.begin(), cameraName.end());
     std::vector<CameraSetting> settings = GetCameraSettings(wCameraName.c_str());
     Napi::Array arr = Napi::Array::New(env, settings.size());
-    for (int i = 0; i < settings.size(); i++)
+    for (int i = 0; static_cast<std::vector<CameraSetting>::size_type>(i) < settings.size(); i++)
     {
       arr.Set(i, GetSetting(env, settings[i]));
     }
@@ -48,7 +48,7 @@ Napi::Value N_SetCameraSettings(const Napi::CallbackInfo &info)
     std::wstring wCameraName = std::wstring(cameraName.begin(), cameraName.end());
     Napi::Array n_settings = info[1].As<Napi::Array>();
     std::vector<CameraSettingSetter> settings;
-    for (int i = 0; i < n_settings.Length(); i++)
+    for (int i = 0; static_cast<uint32_t>(i) < n_settings.Length(); i++)
     {
       Napi::Object obj = n_settings.Get(i).As<Napi::Object>();
       CameraSettingSetter setting;

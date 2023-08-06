@@ -4,10 +4,6 @@
       "target_name": "camera-settings",
       "sources": [ 
         "src/index.cpp",
-        "src/win/camera_settings.cpp"
-      ],
-      "libraries": [
-        "-lstrmiids"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
@@ -16,8 +12,6 @@
       'dependencies': [
         "<!(node -p \"require('node-addon-api').gyp\")"
       ],
-      "cflags": ["-fno-exceptions"],
-      "cflags_cc": ["-fno-exceptions"],
       'defines':['NAPI_DISABLE_CPP_EXCEPTIONS'],
       "conditions": [
           [
@@ -27,12 +21,21 @@
               'msvs_settings': {
                 'VCCLCompilerTool': { "ExceptionHandling": 1, 'AdditionalOptions': [ '-std:c++17' ] }
               },
+              "libraries": [
+                "-lstrmiids"
+              ],
+              "sources": [
+                  "src/win/camera_settings.cpp"
+              ]
             }
           ],
           [
             'OS=="linux"', {
-              "cflags": ["-fno-exceptions", "-fPIC"],
-              "cflags_cc": ["-fno-exceptions", "-fPIC"],
+              "cflags": ["-fexceptions", "-fPIC"],
+              "cflags_cc": ["-fexceptions", "-fPIC"],
+              "sources": [
+                  "src/linux/camera_settings.cpp"
+              ]
             }
           ],
       ]

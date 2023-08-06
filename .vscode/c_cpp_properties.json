@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/node_modules/node-addon-api/**",
-                "C://Users//zzx//AppData//Local//node-gyp//Cache/18.12.1/**"
+                "~/AppData/Local/node-gyp/Cache/18.12.1/**"
             ],
             "defines": [
                 "_DEBUG",
@@ -24,7 +24,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/node_modules/node-addon-api/**",
-                "/home/kylin/.cache/node-gyp/18.13.0/include/node/**"
+                "~/.cache/node-gyp/18.17.0/include/node/**"
             ],
             "defines": [
                 "_DEBUG",

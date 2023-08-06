@@ -1,0 +1,1 @@
+#include "camera_settings_base.h"
