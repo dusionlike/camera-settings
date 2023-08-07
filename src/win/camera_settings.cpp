@@ -130,6 +130,9 @@ std::vector<CameraSetting> GetCameraSettings(int &cameraIndex)
     GetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
   }
 
+  pProcAmp->Release();
+  pCameraControl->Release();
+
   CoUninitialize();
 
   return settings;
@@ -153,6 +156,9 @@ std::vector<CameraSetting> GetCameraSettings(const WCHAR *wszName)
   {
     GetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
   }
+
+  pProcAmp->Release();
+  pCameraControl->Release();
 
   CoUninitialize();
 
@@ -239,6 +245,9 @@ void SetCameraSettings(const WCHAR *wszName, const std::vector<CameraSettingSett
     SetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
   }
 
+  pProcAmp->Release();
+  pCameraControl->Release();
+
   CoUninitialize();
 }
 
@@ -257,6 +266,9 @@ void SetCameraSettings(int &index, const std::vector<CameraSettingSetter> &setti
   {
     SetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
   }
+
+  pProcAmp->Release();
+  pCameraControl->Release();
 
   CoUninitialize();
 }

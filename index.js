@@ -45,22 +45,32 @@ if (process.platform === "win32") {
     [10094850, "exposure"],
     [10094865, "iris"],
     [10094858, "focus"],
-  ])
+  ]);
 }
 
 const propMapReverse = new Map([...propMap].map(([k, v]) => [v, k]));
 
 module.exports.GetCameraSettings = function (cameraName) {
   const settings = bindings.N_GetCameraSettings(cameraName);
-  for (const item of settings) {
-    item.prop = propMap.get(item.prop);
-  }
-  return settings;
+  return settings.map((item) => {
+    return {
+      prop: propMap.get(item.prop),
+      val: item.val,
+      isAuto: item.flags === 1,
+      min: item.min,
+      max: item.max,
+      step: item.step,
+      rangeFlags: item.rangeFlags,
+      def: item.def,
+      ctrlType: item.type === 0 ? "video" : "camera",
+    };
+  });
 };
 
 module.exports.SetCameraSettings = function (cameraName, settings) {
   for (const item of settings) {
     item.prop = propMapReverse.get(item.prop);
+    item.flags = item.isAuto ? 1 : 2;
   }
   bindings.N_SetCameraSettings(cameraName, settings);
 };

@@ -13,7 +13,7 @@ struct CameraSetting
   long val;
   long step;
   long def;
-  /** 1 Auto 2 Manual */
+  /** rangeFlags & 1 Auto; rangeFlags & 2 Auto Manual */
   long rangeFlags;
   /** 1 Auto 2 Manual */
   long flags;

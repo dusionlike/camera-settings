@@ -43,21 +43,22 @@ export type TagVideoProcAmpProperty =
 export interface CameraSettingSetter {
   prop: TagCameraControlProperty | TagVideoProcAmpProperty;
   val: number;
-  flags: number;
+  isAuto?: boolean;
 }
 
 export interface CameraSetting extends CameraSettingSetter {
   min: number;
   max: number;
   step: number;
-  range_flags: number;
+  /** rangeFlags & 1 Auto; rangeFlags & 2 Auto Manual */
+  rangeFlags: boolean;
   def: number;
-  type: number;
+  ctrlType: "video" | "camera";
 }
 
 export function GetCameraSettings(cameraName: string | number): CameraSetting[];
 
 export function SetCameraSettings(
   cameraName: string | number,
-  settings: CameraSettingSetter[],
+  settings: CameraSettingSetter[]
 ): void;
