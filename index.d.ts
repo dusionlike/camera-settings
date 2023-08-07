@@ -55,9 +55,9 @@ export interface CameraSetting extends CameraSettingSetter {
   type: number;
 }
 
-export function GetCameraSettings(cameraName: string): CameraSetting[];
+export function GetCameraSettings(cameraName: string | number): CameraSetting[];
 
 export function SetCameraSettings(
-  cameraName: string,
-  settings: CameraSettingSetter[]
+  cameraName: string | number,
+  settings: CameraSettingSetter[],
 ): void;

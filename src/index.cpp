@@ -24,9 +24,20 @@ Napi::Value N_GetCameraSettings(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
   try
   {
-    std::string cameraName = info[0].As<Napi::String>().Utf8Value();
-    std::wstring wCameraName = std::wstring(cameraName.begin(), cameraName.end());
-    std::vector<CameraSetting> settings = GetCameraSettings(wCameraName.c_str());
+    std::vector<CameraSetting> settings;
+    if (info[0].IsString())
+    {
+      std::string cameraName = info[0].As<Napi::String>().Utf8Value();
+      std::wstring wCameraName = std::wstring(cameraName.begin(), cameraName.end());
+      settings = GetCameraSettings(wCameraName.c_str());
+    }
+    else
+    {
+      Napi::Number index = info[0].As<Napi::Number>();
+      int cameraIndex = index.Int32Value();
+      settings = GetCameraSettings(cameraIndex);
+    }
+
     Napi::Array arr = Napi::Array::New(env, settings.size());
     for (size_t i = 0; i < settings.size(); i++)
     {
@@ -46,8 +57,6 @@ Napi::Value N_SetCameraSettings(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
   try
   {
-    std::string cameraName = info[0].As<Napi::String>().Utf8Value();
-    std::wstring wCameraName = std::wstring(cameraName.begin(), cameraName.end());
     Napi::Array n_settings = info[1].As<Napi::Array>();
     std::vector<CameraSettingSetter> settings;
     for (size_t i = 0; i < n_settings.Length(); i++)
@@ -59,7 +68,19 @@ Napi::Value N_SetCameraSettings(const Napi::CallbackInfo &info)
       setting.flags = obj.Get("flags").As<Napi::Number>().Int32Value();
       settings.push_back(setting);
     }
-    SetCameraSettings(wCameraName.c_str(), settings);
+
+    if (info[0].IsString())
+    {
+      std::string cameraName = info[0].As<Napi::String>().Utf8Value();
+      std::wstring wCameraName = std::wstring(cameraName.begin(), cameraName.end());
+      SetCameraSettings(wCameraName.c_str(), settings);
+    }
+    else
+    {
+      Napi::Number index = info[0].As<Napi::Number>();
+      int cameraIndex = index.Int32Value();
+      SetCameraSettings(cameraIndex, settings);
+    }
   }
   catch (const std::exception &e)
   {

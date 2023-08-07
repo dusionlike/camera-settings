@@ -1,11 +1,11 @@
 // @ts-check
-const CameraSettings = require('../');
+const CameraSettings = require("../");
 
-const ss = CameraSettings.GetCameraSettings('HP HD Camera');
+const ss = CameraSettings.GetCameraSettings(0);
 
 console.log(ss);
 console.log(ss.length);
 
-CameraSettings.SetCameraSettings('HP HD Camera', [
-  { prop: 'white_balance', val: 530, flags: 1 },
+CameraSettings.SetCameraSettings(0, [
+  { prop: "white_balance", val: 2900, flags: 1 },
 ]);

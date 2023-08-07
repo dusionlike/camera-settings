@@ -1,7 +1,13 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #include "win/camera_settings.h"
 
-HRESULT QueryAllInterface(const WCHAR *wszName, IAMVideoProcAmp **ppProcAmp, IAMCameraControl **ppCameraControl)
+void GetCameraSettingsByCtrl(std::vector<CameraSetting> &settings, IAMVideoProcAmp *pProcAmp, IAMCameraControl *pCameraControl);
+void SetCameraSettingsByCtrl(const std::vector<CameraSettingSetter> &settings, IAMVideoProcAmp *pProcAmp, IAMCameraControl *pCameraControl);
+
+/**
+ * Query IAMCameraControl by camera name
+ */
+HRESULT QueryAllInterface(const WCHAR *wszName, int index, IAMVideoProcAmp **ppProcAmp, IAMCameraControl **ppCameraControl)
 {
   // create system device enumerator
   ICreateDevEnum *pCreateDevEnum = NULL;
@@ -22,8 +28,10 @@ HRESULT QueryAllInterface(const WCHAR *wszName, IAMVideoProcAmp **ppProcAmp, IAM
 
   // enumerate video input devices
   IMoniker *pMoniker = NULL;
+  int count = -1;
   while (pEnumMoniker->Next(1, &pMoniker, NULL) == S_OK)
   {
+    count++;
     // get device friendly name
     IPropertyBag *pPropertyBag = NULL;
     hr = pMoniker->BindToStorage(NULL, NULL, IID_IPropertyBag, (void **)&pPropertyBag);
@@ -44,7 +52,7 @@ HRESULT QueryAllInterface(const WCHAR *wszName, IAMVideoProcAmp **ppProcAmp, IAM
     }
 
     // compare device friendly name with specified name
-    if (wcscmp(varName.bstrVal, wszName) == 0)
+    if (count == index || wcscmp(varName.bstrVal, wszName) == 0)
     {
       // create video capture filter
       IBaseFilter *pVideoCaptureFilter = NULL;
@@ -103,20 +111,57 @@ HRESULT QueryAllInterface(const WCHAR *wszName, IAMVideoProcAmp **ppProcAmp, IAM
   return E_FAIL;
 }
 
+std::vector<CameraSetting> GetCameraSettings(int &cameraIndex)
+{
+  CoInitialize(NULL);
+
+  IAMVideoProcAmp *pProcAmp = NULL;
+  IAMCameraControl *pCameraControl = NULL;
+
+  std::vector<CameraSetting> settings;
+
+  HRESULT hr = QueryAllInterface(L"", cameraIndex, &pProcAmp, &pCameraControl);
+  if (FAILED(hr))
+  {
+    std::cerr << "Failed to get IAMCameraControl interface" << std::endl;
+  }
+  else
+  {
+    GetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
+  }
+
+  CoUninitialize();
+
+  return settings;
+}
+
 std::vector<CameraSetting> GetCameraSettings(const WCHAR *wszName)
 {
   CoInitialize(NULL);
 
   IAMVideoProcAmp *pProcAmp = NULL;
   IAMCameraControl *pCameraControl = NULL;
-  HRESULT hr = QueryAllInterface(wszName, &pProcAmp, &pCameraControl);
-  if (FAILED(hr))
-  {
-    throw std::runtime_error("Failed to query device");
-  }
 
   std::vector<CameraSetting> settings;
 
+  HRESULT hr = QueryAllInterface(wszName, -1, &pProcAmp, &pCameraControl);
+  if (FAILED(hr))
+  {
+    std::cerr << "Failed to query device" << std::endl;
+  }
+  else
+  {
+    GetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
+  }
+
+  CoUninitialize();
+
+  return settings;
+}
+
+void GetCameraSettingsByCtrl(std::vector<CameraSetting> &settings, IAMVideoProcAmp *pProcAmp, IAMCameraControl *pCameraControl)
+{
+  HRESULT hr;
   for (int i = 0; i <= VideoProcAmp_Gain; i++)
   {
     long min, max, val, step, def, range_flags, flags;
@@ -176,10 +221,6 @@ std::vector<CameraSetting> GetCameraSettings(const WCHAR *wszName)
     setting.type = 1;
     settings.push_back(setting);
   }
-
-  CoUninitialize();
-
-  return settings;
 }
 
 void SetCameraSettings(const WCHAR *wszName, const std::vector<CameraSettingSetter> &settings)
@@ -188,12 +229,41 @@ void SetCameraSettings(const WCHAR *wszName, const std::vector<CameraSettingSett
 
   IAMVideoProcAmp *pProcAmp = NULL;
   IAMCameraControl *pCameraControl = NULL;
-  HRESULT hr = QueryAllInterface(wszName, &pProcAmp, &pCameraControl);
+  HRESULT hr = QueryAllInterface(wszName, -1, &pProcAmp, &pCameraControl);
   if (FAILED(hr))
   {
-    throw std::runtime_error("Failed to query device");
+    std::cerr << "Failed to query device" << std::endl;
+  }
+  else
+  {
+    SetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
   }
 
+  CoUninitialize();
+}
+
+void SetCameraSettings(int &index, const std::vector<CameraSettingSetter> &settings)
+{
+  CoInitialize(NULL);
+
+  IAMVideoProcAmp *pProcAmp = NULL;
+  IAMCameraControl *pCameraControl = NULL;
+  HRESULT hr = QueryAllInterface(L"", index, &pProcAmp, &pCameraControl);
+  if (FAILED(hr))
+  {
+    std::cerr << "Failed to query device" << std::endl;
+  }
+  else
+  {
+    SetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
+  }
+
+  CoUninitialize();
+}
+
+void SetCameraSettingsByCtrl(const std::vector<CameraSettingSetter> &settings, IAMVideoProcAmp *pProcAmp, IAMCameraControl *pCameraControl)
+{
+  HRESULT hr;
   for (auto setting : settings)
   {
     if (setting.prop >= 100 && setting.prop < 200)
@@ -215,8 +285,6 @@ void SetCameraSettings(const WCHAR *wszName, const std::vector<CameraSettingSett
       }
     }
   }
-
-  CoUninitialize();
 }
 #else
 #endif
