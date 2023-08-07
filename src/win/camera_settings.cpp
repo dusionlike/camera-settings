@@ -141,7 +141,7 @@ std::vector<CameraSetting> GetCameraSettings(const WCHAR *wszName)
     setting.val = val;
     setting.step = step;
     setting.def = def;
-    setting.range_flags = range_flags;
+    setting.rangeFlags = range_flags;
     setting.flags = flags;
     setting.type = 0;
     settings.push_back(setting);
@@ -171,7 +171,7 @@ std::vector<CameraSetting> GetCameraSettings(const WCHAR *wszName)
     setting.val = val;
     setting.step = step;
     setting.def = def;
-    setting.range_flags = range_flags;
+    setting.rangeFlags = range_flags;
     setting.flags = flags;
     setting.type = 1;
     settings.push_back(setting);
