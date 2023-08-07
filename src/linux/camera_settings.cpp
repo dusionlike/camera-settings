@@ -90,7 +90,7 @@ std::vector<CameraSetting> GetCameraSettings(const wchar_t *wszName)
   return GetCameraSettingsByFd(queryVideoFdByName(name));
 }
 
-std::vector<CameraSetting> GetCameraSettings(int &cameraIndex)
+std::vector<CameraSetting> GetCameraSettings(int cameraIndex)
 {
   return GetCameraSettingsByFd(queryVideoFdByIndex(cameraIndex));
 }
@@ -185,7 +185,7 @@ void SetCameraSettings(const wchar_t *wszName, const std::vector<CameraSettingSe
   return SetCameraSettingsByFd(queryVideoFdByName(name), settings);
 }
 
-void SetCameraSettings(int &cameraIndex, const std::vector<CameraSettingSetter> &settings)
+void SetCameraSettings(int cameraIndex, const std::vector<CameraSettingSetter> &settings)
 {
   return SetCameraSettingsByFd(queryVideoFdByIndex(cameraIndex), settings);
 }

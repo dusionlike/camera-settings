@@ -38,7 +38,7 @@ std::vector<CameraSetting> GetCameraSettings(const wchar_t *wszName);
  * Get camera settings by camera index
  * @param cameraIndex camera index
  */
-std::vector<CameraSetting> GetCameraSettings(int &cameraIndex);
+std::vector<CameraSetting> GetCameraSettings(int cameraIndex);
 
 /**
  * Set camera settings by camera name
@@ -51,6 +51,6 @@ void SetCameraSettings(const wchar_t *wszName, const std::vector<CameraSettingSe
  * Set camera settings by camera index
  * @param cameraIndex camera index
 */
-void SetCameraSettings(int &cameraIndex, const std::vector<CameraSettingSetter> &settings);
+void SetCameraSettings(int cameraIndex, const std::vector<CameraSettingSetter> &settings);
 
 #endif

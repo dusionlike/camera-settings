@@ -111,7 +111,7 @@ HRESULT QueryAllInterface(const WCHAR *wszName, int index, IAMVideoProcAmp **ppP
   return E_FAIL;
 }
 
-std::vector<CameraSetting> GetCameraSettings(int &cameraIndex)
+std::vector<CameraSetting> GetCameraSettings(int cameraIndex)
 {
   CoInitialize(NULL);
 
@@ -128,10 +128,9 @@ std::vector<CameraSetting> GetCameraSettings(int &cameraIndex)
   else
   {
     GetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
+    pProcAmp->Release();
+    pCameraControl->Release();
   }
-
-  pProcAmp->Release();
-  pCameraControl->Release();
 
   CoUninitialize();
 
@@ -155,10 +154,9 @@ std::vector<CameraSetting> GetCameraSettings(const WCHAR *wszName)
   else
   {
     GetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
+    pProcAmp->Release();
+    pCameraControl->Release();
   }
-
-  pProcAmp->Release();
-  pCameraControl->Release();
 
   CoUninitialize();
 
@@ -174,14 +172,14 @@ void GetCameraSettingsByCtrl(std::vector<CameraSetting> &settings, IAMVideoProcA
     hr = pProcAmp->GetRange(i, &min, &max, &step, &def, &range_flags);
     if (FAILED(hr))
     {
-      std::cerr << "Failed to get range" << std::endl;
+      // std::cerr << "Failed to get range" << std::endl;
       continue;
     }
 
     hr = pProcAmp->Get(i, &val, &flags);
     if (FAILED(hr))
     {
-      std::cerr << "Failed to get value" << std::endl;
+      // std::cerr << "Failed to get value" << std::endl;
       continue;
     }
 
@@ -204,14 +202,14 @@ void GetCameraSettingsByCtrl(std::vector<CameraSetting> &settings, IAMVideoProcA
     hr = pCameraControl->GetRange(i, &min, &max, &step, &def, &range_flags);
     if (FAILED(hr))
     {
-      std::cerr << "Failed to get range" << std::endl;
+      // std::cerr << "Failed to get range" << std::endl;
       continue;
     }
 
     hr = pCameraControl->Get(i, &val, &flags);
     if (FAILED(hr))
     {
-      std::cerr << "Failed to get value" << std::endl;
+      // std::cerr << "Failed to get value" << std::endl;
       continue;
     }
 
@@ -243,15 +241,14 @@ void SetCameraSettings(const WCHAR *wszName, const std::vector<CameraSettingSett
   else
   {
     SetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
+    pProcAmp->Release();
+    pCameraControl->Release();
   }
-
-  pProcAmp->Release();
-  pCameraControl->Release();
 
   CoUninitialize();
 }
 
-void SetCameraSettings(int &index, const std::vector<CameraSettingSetter> &settings)
+void SetCameraSettings(int index, const std::vector<CameraSettingSetter> &settings)
 {
   CoInitialize(NULL);
 
@@ -265,10 +262,9 @@ void SetCameraSettings(int &index, const std::vector<CameraSettingSetter> &setti
   else
   {
     SetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
+    pProcAmp->Release();
+    pCameraControl->Release();
   }
-
-  pProcAmp->Release();
-  pCameraControl->Release();
 
   CoUninitialize();
 }

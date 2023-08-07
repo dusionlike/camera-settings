@@ -56,9 +56,18 @@ export interface CameraSetting extends CameraSettingSetter {
   ctrlType: "video" | "camera";
 }
 
-export function GetCameraSettings(cameraName: string | number): CameraSetting[];
+export function GetCameraSettingsSync(cameraName: string | number): CameraSetting[];
+
+export function SetCameraSettingsSync(
+  cameraName: string | number,
+  settings: CameraSettingSetter[]
+): void;
+
+export function GetCameraSettings(
+  cameraName: string | number
+): Promise<CameraSetting[]>;
 
 export function SetCameraSettings(
   cameraName: string | number,
   settings: CameraSettingSetter[]
-): void;
+): Promise<void>;

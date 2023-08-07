@@ -50,8 +50,7 @@ if (process.platform === "win32") {
 
 const propMapReverse = new Map([...propMap].map(([k, v]) => [v, k]));
 
-module.exports.GetCameraSettings = function (cameraName) {
-  const settings = bindings.N_GetCameraSettings(cameraName);
+function dealGetSettingsRes(settings) {
   return settings.map((item) => {
     return {
       prop: propMap.get(item.prop),
@@ -65,12 +64,54 @@ module.exports.GetCameraSettings = function (cameraName) {
       ctrlType: item.type === 0 ? "video" : "camera",
     };
   });
+}
+
+module.exports.GetCameraSettingsSync = function (cameraName) {
+  const settings = bindings.N_GetCameraSettingsSync(cameraName);
+  return dealGetSettingsRes(settings);
+};
+
+module.exports.GetCameraSettings = async function (cameraName) {
+  return new Promise((resolve, reject) => {
+    bindings.N_GetCameraSettings(cameraName, (err, settings) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(settings);
+      }
+    });
+  });
+};
+
+function dealSetCameraSettingsRes(settings) {
+  return settings.map((item) => {
+    return {
+      prop: propMapReverse.get(item.prop),
+      val: item.val,
+      flags: item.isAuto ? 1 : 2,
+    };
+  });
+}
+
+module.exports.SetCameraSettingsSync = function (cameraName, settings) {
+  bindings.N_SetCameraSettingsSync(
+    cameraName,
+    dealSetCameraSettingsRes(settings)
+  );
 };
 
 module.exports.SetCameraSettings = function (cameraName, settings) {
-  for (const item of settings) {
-    item.prop = propMapReverse.get(item.prop);
-    item.flags = item.isAuto ? 1 : 2;
-  }
-  bindings.N_SetCameraSettings(cameraName, settings);
+  return new Promise((resolve, reject) => {
+    bindings.N_SetCameraSettings(
+      cameraName,
+      dealSetCameraSettingsRes(settings),
+      (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      }
+    );
+  });
 };
