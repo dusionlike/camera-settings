@@ -10,7 +10,8 @@
 #include <codecvt>
 #include <cstring>
 
-std::vector<CameraSetting> GetCameraSettingsByV4l2(int fd);
+std::vector<CameraSetting> GetCameraSettingsByFd(int fd);
+void SetCameraSettingsByFd(int fd, const std::vector<CameraSettingSetter> &settings);
 
 const uint32_t ctrl_id_list[] =
     {V4L2_CID_BRIGHTNESS,
@@ -86,15 +87,15 @@ std::vector<CameraSetting> GetCameraSettings(const wchar_t *wszName)
 {
   std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
   std::string name = converter.to_bytes(wszName);
-  return GetCameraSettingsByV4l2(queryVideoFdByName(name));
+  return GetCameraSettingsByFd(queryVideoFdByName(name));
 }
 
 std::vector<CameraSetting> GetCameraSettings(int &cameraIndex)
 {
-  return GetCameraSettingsByV4l2(queryVideoFdByIndex(cameraIndex));
+  return GetCameraSettingsByFd(queryVideoFdByIndex(cameraIndex));
 }
 
-std::vector<CameraSetting> GetCameraSettingsByV4l2(int fd)
+std::vector<CameraSetting> GetCameraSettingsByFd(int fd)
 {
   std::vector<CameraSetting> settings;
   if (fd == -1)
@@ -114,7 +115,7 @@ std::vector<CameraSetting> GetCameraSettingsByV4l2(int fd)
   for (size_t i = 0; i < len; i++)
   {
     queryctrl.id = ctrl_id_list[i];
-    std::cout << queryctrl.id << std::endl;
+    // std::cout << queryctrl.id << std::endl;
     if (0 != queryctrl.id && 0 == ioctl(fd, VIDIOC_QUERYCTRL, &queryctrl))
     {
       if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
@@ -150,14 +151,18 @@ std::vector<CameraSetting> GetCameraSettingsByV4l2(int fd)
       case V4L2_CID_WHITE_BALANCE_TEMPERATURE:
         ctrl.id = V4L2_CID_AUTO_WHITE_BALANCE;
         ioctl(fd, VIDIOC_G_CTRL, &ctrl);
+        setting.flags = ctrl.value == 1 ? 1 : 2;
         break;
       case V4L2_CID_EXPOSURE_ABSOLUTE:
-        ctrl.id = V4L2_CID_EXPOSURE_AUTO_PRIORITY;
+        ctrl.id = V4L2_CID_EXPOSURE_AUTO;
         ioctl(fd, VIDIOC_G_CTRL, &ctrl);
+        // 3 auto, 1 manual
+        setting.flags = ctrl.value == 3 ? 1 : 2;
         break;
       case V4L2_CID_FOCUS_ABSOLUTE:
         ctrl.id = V4L2_CID_FOCUS_AUTO;
         ioctl(fd, VIDIOC_G_CTRL, &ctrl);
+        setting.flags = ctrl.value == 1 ? 1 : 2;
         break;
       default:
         setting.flags = 2;
@@ -175,7 +180,61 @@ std::vector<CameraSetting> GetCameraSettingsByV4l2(int fd)
 
 void SetCameraSettings(const wchar_t *wszName, const std::vector<CameraSettingSetter> &settings)
 {
-  // TODO
+  std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+  std::string name = converter.to_bytes(wszName);
+  return SetCameraSettingsByFd(queryVideoFdByName(name), settings);
+}
+
+void SetCameraSettings(int &cameraIndex, const std::vector<CameraSettingSetter> &settings)
+{
+  return SetCameraSettingsByFd(queryVideoFdByIndex(cameraIndex), settings);
+}
+
+void SetCameraSettingsByFd(int fd, const std::vector<CameraSettingSetter> &settings)
+{
+  if (fd == -1)
+  {
+    return;
+  }
+  close(fd);
+  fd = open("/dev/video0", O_RDWR);
+
+  struct v4l2_control ctrl;
+  memset(&ctrl, 0, sizeof(ctrl));
+
+  for (size_t i = 0; i < settings.size(); i++)
+  {
+    switch (settings[i].prop)
+    {
+    case V4L2_CID_WHITE_BALANCE_TEMPERATURE:
+      ctrl.id = V4L2_CID_AUTO_WHITE_BALANCE;
+      ctrl.value = settings[i].flags == 1 ? 1 : 0;
+      ioctl(fd, VIDIOC_S_CTRL, &ctrl);
+      break;
+    case V4L2_CID_EXPOSURE_ABSOLUTE:
+      ctrl.id = V4L2_CID_EXPOSURE_AUTO;
+      ctrl.value = settings[i].flags == 1 ? 3 : 1;
+      ioctl(fd, VIDIOC_S_CTRL, &ctrl);
+      break;
+    case V4L2_CID_FOCUS_ABSOLUTE:
+      ctrl.id = V4L2_CID_FOCUS_AUTO;
+      ctrl.value = settings[i].flags == 1 ? 1 : 0;
+      ioctl(fd, VIDIOC_S_CTRL, &ctrl);
+      break;
+    default:
+      break;
+    }
+    ctrl.id = settings[i].prop;
+    ctrl.value = settings[i].val;
+
+    int err = errno;
+    if (-1 == ioctl(fd, VIDIOC_S_CTRL, &ctrl))
+    {
+      std::cout << "set " << ctrl.id << " to " << ctrl.value << " failed: " << strerror(err) << std::endl;
+    }
+  }
+
+  close(fd);
 }
 
 #else

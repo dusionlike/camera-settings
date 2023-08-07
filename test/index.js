@@ -6,6 +6,6 @@ const ss = CameraSettings.GetCameraSettings('HP HD Camera');
 console.log(ss);
 console.log(ss.length);
 
-// CameraSettings.SetCameraSettings('HP HD Camera', [
-//   { prop: 'exposure', val: 0, flags: 1 },
-// ]);
+CameraSettings.SetCameraSettings('HP HD Camera', [
+  { prop: 'white_balance', val: 530, flags: 1 },
+]);

@@ -13,7 +13,9 @@ struct CameraSetting
   long val;
   long step;
   long def;
+  /** 1 Auto 2 Manual */
   long rangeFlags;
+  /** 1 Auto 2 Manual */
   long flags;
   long type;
 };
@@ -22,6 +24,7 @@ struct CameraSettingSetter
 {
   long prop;
   long val;
+  /** 1 Auto 2 Manual */
   long flags;
 };
 
