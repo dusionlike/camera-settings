@@ -13,7 +13,7 @@ struct CameraSetting
   long val;
   long step;
   long def;
-  long range_flags;
+  long rangeFlags;
   long flags;
   long type;
 };
