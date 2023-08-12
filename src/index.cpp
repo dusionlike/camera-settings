@@ -65,7 +65,6 @@ Napi::Value N_GetCameraResolutions(const Napi::CallbackInfo &info)
   std::wstring wCameraName = L"";
   int camIndex = -1;
   QueryJsParams(info, wCameraName, camIndex);
-  const wchar_t *zz = wCameraName.c_str();
   GetResolutionsWorker *worker = new GetResolutionsWorker(env, wCameraName.c_str(), camIndex);
   worker->Queue();
   return worker->Promise();
