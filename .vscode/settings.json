@@ -72,6 +72,9 @@
     "xlocbuf": "cpp",
     "xlocmes": "cpp",
     "xlocmon": "cpp",
-    "xloctime": "cpp"
+    "xloctime": "cpp",
+    "map": "cpp",
+    "xtree": "cpp",
+    "set": "cpp"
   }
 }

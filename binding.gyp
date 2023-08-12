@@ -4,6 +4,9 @@
       "target_name": "camera-settings",
       "sources": [ 
         "src/index.cpp",
+        "src/get_settings.hpp",
+        "src/set_settings.hpp",
+        "src/get_resolution.hpp"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

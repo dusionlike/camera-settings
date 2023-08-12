@@ -1,13 +1,57 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-#include "win/camera_settings.h"
+#include <dshow.h>
+#include "camera_settings_base.h"
 
-void GetCameraSettingsByCtrl(std::vector<CameraSetting> &settings, IAMVideoProcAmp *pProcAmp, IAMCameraControl *pCameraControl);
-void SetCameraSettingsByCtrl(const std::vector<CameraSettingSetter> &settings, IAMVideoProcAmp *pProcAmp, IAMCameraControl *pCameraControl);
+std::vector<Resolution> GetAvailableCameraResolutions(IBaseFilter *pFilter);
+
+std::map<int, std::string> propMapVideo = {
+    {VideoProcAmp_Brightness, "Brightness"},
+    {VideoProcAmp_Contrast, "Contrast"},
+    {VideoProcAmp_Hue, "Hue"},
+    {VideoProcAmp_Saturation, "Saturation"},
+    {VideoProcAmp_Sharpness, "Sharpness"},
+    {VideoProcAmp_Gamma, "Gamma"},
+    {VideoProcAmp_ColorEnable, "ColorEnable"},
+    {VideoProcAmp_WhiteBalance, "WhiteBalance"},
+    {VideoProcAmp_BacklightCompensation, "BacklightCompensation"},
+    {VideoProcAmp_Gain, "Gain"},
+};
+std::map<int, std::string> propMapCamera = {
+    {CameraControl_Pan, "Pan"},
+    {CameraControl_Tilt, "Tilt"},
+    {CameraControl_Roll, "Roll"},
+    {CameraControl_Zoom, "Zoom"},
+    {CameraControl_Exposure, "Exposure"},
+    {CameraControl_Iris, "Iris"},
+    {CameraControl_Focus, "Focus"},
+};
+
+std::map<std::string, int> propMapVideoReverse = {
+    {"Brightness", VideoProcAmp_Brightness},
+    {"Contrast", VideoProcAmp_Contrast},
+    {"Hue", VideoProcAmp_Hue},
+    {"Saturation", VideoProcAmp_Saturation},
+    {"Sharpness", VideoProcAmp_Sharpness},
+    {"Gamma", VideoProcAmp_Gamma},
+    {"ColorEnable", VideoProcAmp_ColorEnable},
+    {"WhiteBalance", VideoProcAmp_WhiteBalance},
+    {"BacklightCompensation", VideoProcAmp_BacklightCompensation},
+    {"Gain", VideoProcAmp_Gain},
+};
+std::map<std::string, int> propMapCameraReverse = {
+    {"Pan", CameraControl_Pan},
+    {"Tilt", CameraControl_Tilt},
+    {"Roll", CameraControl_Roll},
+    {"Zoom", CameraControl_Zoom},
+    {"Exposure", CameraControl_Exposure},
+    {"Iris", CameraControl_Iris},
+    {"Focus", CameraControl_Focus},
+};
 
 /**
  * Query IAMCameraControl by camera name
  */
-HRESULT QueryAllInterface(const WCHAR *wszName, int index, IAMVideoProcAmp **ppProcAmp, IAMCameraControl **ppCameraControl)
+HRESULT QueryIBaseFilter(const WCHAR *wszName, int index, IBaseFilter **ppVideoCaptureFilter)
 {
   // create system device enumerator
   ICreateDevEnum *pCreateDevEnum = NULL;
@@ -54,34 +98,10 @@ HRESULT QueryAllInterface(const WCHAR *wszName, int index, IAMVideoProcAmp **ppP
     // compare device friendly name with specified name
     if (count == index || wcscmp(varName.bstrVal, wszName) == 0)
     {
-      // create video capture filter
-      IBaseFilter *pVideoCaptureFilter = NULL;
-      hr = pMoniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void **)&pVideoCaptureFilter);
+      hr = pMoniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void **)ppVideoCaptureFilter);
       if (FAILED(hr))
       {
         VariantClear(&varName);
-        pPropertyBag->Release();
-        pMoniker->Release();
-        continue;
-      }
-
-      // get IAMCameraControl interface
-      hr = pVideoCaptureFilter->QueryInterface(IID_IAMCameraControl, (void **)ppCameraControl);
-      if (FAILED(hr))
-      {
-        VariantClear(&varName);
-        pVideoCaptureFilter->Release();
-        pPropertyBag->Release();
-        pMoniker->Release();
-        continue;
-      }
-
-      // get IAMVideoProcAmp interface
-      hr = pVideoCaptureFilter->QueryInterface(IID_IAMVideoProcAmp, (void **)ppProcAmp);
-      if (FAILED(hr))
-      {
-        VariantClear(&varName);
-        pVideoCaptureFilter->Release();
         pPropertyBag->Release();
         pMoniker->Release();
         continue;
@@ -89,7 +109,6 @@ HRESULT QueryAllInterface(const WCHAR *wszName, int index, IAMVideoProcAmp **ppP
 
       // release resources
       VariantClear(&varName);
-      pVideoCaptureFilter->Release();
       pPropertyBag->Release();
       pMoniker->Release();
 
@@ -111,7 +130,39 @@ HRESULT QueryAllInterface(const WCHAR *wszName, int index, IAMVideoProcAmp **ppP
   return E_FAIL;
 }
 
-std::vector<CameraSetting> GetCameraSettings(int cameraIndex)
+/**
+ * Query IAMCameraControl by camera name
+ */
+HRESULT QueryAllInterface(const WCHAR *wszName, int index, IAMVideoProcAmp **ppProcAmp, IAMCameraControl **ppCameraControl)
+{
+  // create video capture filter
+  IBaseFilter *pVideoCaptureFilter = NULL;
+  HRESULT hr = QueryIBaseFilter(wszName, index, &pVideoCaptureFilter);
+  if (FAILED(hr))
+  {
+    return E_FAIL;
+  }
+
+  // get IAMCameraControl interface
+  hr = pVideoCaptureFilter->QueryInterface(IID_IAMCameraControl, (void **)ppCameraControl);
+  if (FAILED(hr))
+  {
+    pVideoCaptureFilter->Release();
+    return E_FAIL;
+  }
+
+  // get IAMVideoProcAmp interface
+  hr = pVideoCaptureFilter->QueryInterface(IID_IAMVideoProcAmp, (void **)ppProcAmp);
+  if (FAILED(hr))
+  {
+    pVideoCaptureFilter->Release();
+    return E_FAIL;
+  }
+  pVideoCaptureFilter->Release();
+  return S_OK;
+}
+
+std::vector<CameraSetting> GetCameraSettings(const wchar_t *wszName, int index)
 {
   CoInitialize(NULL);
 
@@ -120,14 +171,72 @@ std::vector<CameraSetting> GetCameraSettings(int cameraIndex)
 
   std::vector<CameraSetting> settings;
 
-  HRESULT hr = QueryAllInterface(L"", cameraIndex, &pProcAmp, &pCameraControl);
+  HRESULT hr = QueryAllInterface(wszName, index, &pProcAmp, &pCameraControl);
   if (FAILED(hr))
   {
-    std::cerr << "Failed to get IAMCameraControl interface" << std::endl;
+    throw std::runtime_error("Failed to query device");
   }
   else
   {
-    GetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
+    for (int i = 0; i <= VideoProcAmp_Gain; i++)
+    {
+      long min, max, val, step, def, range_flags, flags;
+      hr = pProcAmp->GetRange(i, &min, &max, &step, &def, &range_flags);
+      if (FAILED(hr))
+      {
+        // std::cerr << "Failed to get range" << std::endl;
+        continue;
+      }
+
+      hr = pProcAmp->Get(i, &val, &flags);
+      if (FAILED(hr))
+      {
+        // std::cerr << "Failed to get value" << std::endl;
+        continue;
+      }
+
+      CameraSetting setting;
+      setting.prop = propMapVideo[i];
+      setting.min = min;
+      setting.max = max;
+      setting.val = val;
+      setting.step = step;
+      setting.def = def;
+      setting.rangeFlags = range_flags;
+      setting.isAuto = flags == 1;
+      setting.ctrlType = "video";
+      settings.push_back(setting);
+    }
+
+    for (int i = 0; i <= CameraControl_Focus; i++)
+    {
+      long min, max, val, step, def, range_flags, flags;
+      hr = pCameraControl->GetRange(i, &min, &max, &step, &def, &range_flags);
+      if (FAILED(hr))
+      {
+        // std::cerr << "Failed to get range" << std::endl;
+        continue;
+      }
+
+      hr = pCameraControl->Get(i, &val, &flags);
+      if (FAILED(hr))
+      {
+        // std::cerr << "Failed to get value" << std::endl;
+        continue;
+      }
+
+      CameraSetting setting;
+      setting.prop = propMapCamera[i];
+      setting.min = min;
+      setting.max = max;
+      setting.val = val;
+      setting.step = step;
+      setting.def = def;
+      setting.rangeFlags = range_flags;
+      setting.isAuto = flags == 1;
+      setting.ctrlType = "camera";
+      settings.push_back(setting);
+    }
     pProcAmp->Release();
     pCameraControl->Release();
   }
@@ -137,162 +246,129 @@ std::vector<CameraSetting> GetCameraSettings(int cameraIndex)
   return settings;
 }
 
-std::vector<CameraSetting> GetCameraSettings(const WCHAR *wszName)
+void SetCameraSettings(const WCHAR *wszName, int index, const std::vector<CameraSettingSetter> &settings)
 {
   CoInitialize(NULL);
 
   IAMVideoProcAmp *pProcAmp = NULL;
   IAMCameraControl *pCameraControl = NULL;
-
-  std::vector<CameraSetting> settings;
-
-  HRESULT hr = QueryAllInterface(wszName, -1, &pProcAmp, &pCameraControl);
+  HRESULT hr = QueryAllInterface(wszName, index, &pProcAmp, &pCameraControl);
   if (FAILED(hr))
   {
-    std::cerr << "Failed to query device" << std::endl;
+    throw std::runtime_error("Failed to query device");
   }
   else
   {
-    GetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
-    pProcAmp->Release();
-    pCameraControl->Release();
-  }
-
-  CoUninitialize();
-
-  return settings;
-}
-
-void GetCameraSettingsByCtrl(std::vector<CameraSetting> &settings, IAMVideoProcAmp *pProcAmp, IAMCameraControl *pCameraControl)
-{
-  HRESULT hr;
-  for (int i = 0; i <= VideoProcAmp_Gain; i++)
-  {
-    long min, max, val, step, def, range_flags, flags;
-    hr = pProcAmp->GetRange(i, &min, &max, &step, &def, &range_flags);
-    if (FAILED(hr))
+    for (auto setting : settings)
     {
-      // std::cerr << "Failed to get range" << std::endl;
-      continue;
-    }
-
-    hr = pProcAmp->Get(i, &val, &flags);
-    if (FAILED(hr))
-    {
-      // std::cerr << "Failed to get value" << std::endl;
-      continue;
-    }
-
-    CameraSetting setting;
-    setting.prop = i + 100;
-    setting.min = min;
-    setting.max = max;
-    setting.val = val;
-    setting.step = step;
-    setting.def = def;
-    setting.rangeFlags = range_flags;
-    setting.flags = flags;
-    setting.type = 0;
-    settings.push_back(setting);
-  }
-
-  for (int i = 0; i <= CameraControl_Focus; i++)
-  {
-    long min, max, val, step, def, range_flags, flags;
-    hr = pCameraControl->GetRange(i, &min, &max, &step, &def, &range_flags);
-    if (FAILED(hr))
-    {
-      // std::cerr << "Failed to get range" << std::endl;
-      continue;
-    }
-
-    hr = pCameraControl->Get(i, &val, &flags);
-    if (FAILED(hr))
-    {
-      // std::cerr << "Failed to get value" << std::endl;
-      continue;
-    }
-
-    CameraSetting setting;
-    setting.prop = i + 200;
-    setting.min = min;
-    setting.max = max;
-    setting.val = val;
-    setting.step = step;
-    setting.def = def;
-    setting.rangeFlags = range_flags;
-    setting.flags = flags;
-    setting.type = 1;
-    settings.push_back(setting);
-  }
-}
-
-void SetCameraSettings(const WCHAR *wszName, const std::vector<CameraSettingSetter> &settings)
-{
-  CoInitialize(NULL);
-
-  IAMVideoProcAmp *pProcAmp = NULL;
-  IAMCameraControl *pCameraControl = NULL;
-  HRESULT hr = QueryAllInterface(wszName, -1, &pProcAmp, &pCameraControl);
-  if (FAILED(hr))
-  {
-    std::cerr << "Failed to query device" << std::endl;
-  }
-  else
-  {
-    SetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
-    pProcAmp->Release();
-    pCameraControl->Release();
-  }
-
-  CoUninitialize();
-}
-
-void SetCameraSettings(int index, const std::vector<CameraSettingSetter> &settings)
-{
-  CoInitialize(NULL);
-
-  IAMVideoProcAmp *pProcAmp = NULL;
-  IAMCameraControl *pCameraControl = NULL;
-  HRESULT hr = QueryAllInterface(L"", index, &pProcAmp, &pCameraControl);
-  if (FAILED(hr))
-  {
-    std::cerr << "Failed to query device" << std::endl;
-  }
-  else
-  {
-    SetCameraSettingsByCtrl(settings, pProcAmp, pCameraControl);
-    pProcAmp->Release();
-    pCameraControl->Release();
-  }
-
-  CoUninitialize();
-}
-
-void SetCameraSettingsByCtrl(const std::vector<CameraSettingSetter> &settings, IAMVideoProcAmp *pProcAmp, IAMCameraControl *pCameraControl)
-{
-  HRESULT hr;
-  for (auto setting : settings)
-  {
-    if (setting.prop >= 100 && setting.prop < 200)
-    {
-      hr = pProcAmp->Set(setting.prop - 100, setting.val, setting.flags);
-      if (FAILED(hr))
+      long flags = setting.isAuto ? 1 : 2;
+      long prop;
+      if (propMapVideoReverse.count(setting.prop))
       {
-        std::cerr << "Failed to set value" << std::endl;
-        continue;
+        prop = propMapVideoReverse[setting.prop];
+        hr = pProcAmp->Set(prop, setting.val, flags);
+        if (FAILED(hr))
+        {
+          std::cerr << "Failed to set value. Error code: 0x" << std::hex << hr << std::endl;
+          continue;
+        }
+      }
+      else if (propMapCameraReverse.count(setting.prop))
+      {
+        prop = propMapCameraReverse[setting.prop];
+        hr = pCameraControl->Set(prop, setting.val, flags);
+        if (FAILED(hr))
+        {
+          std::cerr << "Failed to set value. Error code: 0x" << std::hex << hr << std::endl;
+          continue;
+        }
+      }
+      else
+      {
+        throw std::runtime_error("Invalid prop");
       }
     }
-    else if (setting.prop >= 200 && setting.prop < 300)
-    {
-      hr = pCameraControl->Set(setting.prop - 200, setting.val, setting.flags);
-      if (FAILED(hr))
-      {
-        std::cerr << "Failed to set value" << std::endl;
-        continue;
-      }
-    }
+    pProcAmp->Release();
+    pCameraControl->Release();
   }
+
+  CoUninitialize();
 }
+
+std::vector<Resolution> GetCameraResolutions(const wchar_t *wszName, int index)
+{
+  CoInitialize(NULL);
+
+  // create video capture filter
+  IBaseFilter *pVideoCaptureFilter = NULL;
+  HRESULT hr = QueryIBaseFilter(wszName, index, &pVideoCaptureFilter);
+  if (FAILED(hr))
+  {
+    throw std::runtime_error("Failed to query device");
+  }
+  std::vector<Resolution> resolutions;
+
+  IEnumPins *pEnum = NULL;
+  IPin *pPin = NULL;
+  hr = pVideoCaptureFilter->EnumPins(&pEnum);
+  if (FAILED(hr))
+  {
+    throw std::runtime_error("Failed to enumerate pins");
+  }
+
+  while (pEnum->Next(1, &pPin, NULL) == S_OK)
+  {
+    IAMStreamConfig *pConfig = NULL;
+    hr = pPin->QueryInterface(IID_PPV_ARGS(&pConfig));
+    if (SUCCEEDED(hr))
+    {
+      int iCount = 0, iSize = 0;
+      hr = pConfig->GetNumberOfCapabilities(&iCount, &iSize);
+      if (SUCCEEDED(hr))
+      {
+        for (int i = 0; i < iCount; i++)
+        {
+          VIDEO_STREAM_CONFIG_CAPS caps;
+          AM_MEDIA_TYPE *pmtConfig = NULL;
+          hr = pConfig->GetStreamCaps(i, &pmtConfig, (BYTE *)&caps);
+          if (SUCCEEDED(hr))
+          {
+            if (pmtConfig->formattype == FORMAT_VideoInfo)
+            {
+              VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER *)pmtConfig->pbFormat;
+
+              std::string type = "unkown";
+              if (IsEqualGUID(pmtConfig->subtype, MEDIASUBTYPE_YUY2))
+              {
+                type = "yuy2";
+              }
+              else if (IsEqualGUID(pmtConfig->subtype, MEDIASUBTYPE_MJPG))
+              {
+                type = "mjpg";
+              }
+              else if (IsEqualGUID(pmtConfig->subtype, MEDIASUBTYPE_RGB24))
+              {
+                type = "rgb24";
+              }
+
+              Resolution resolution = {pVih->bmiHeader.biWidth, pVih->bmiHeader.biHeight, type};
+              resolutions.push_back(resolution);
+            }
+            CoTaskMemFree(pmtConfig);
+          }
+        }
+      }
+      pConfig->Release();
+    }
+    pPin->Release();
+  }
+
+  pEnum->Release();
+
+  CoUninitialize();
+
+  return resolutions;
+}
+
 #else
 #endif

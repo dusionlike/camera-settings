@@ -4,32 +4,29 @@ const CameraSettings = require("../");
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 (async () => {
-  console.time("GetCameraSettings");
-  await CameraSettings.GetCameraSettings(0);
-  console.timeEnd("GetCameraSettings");
+  try {
+    console.time("getCameraSettings");
+    const res1 = await CameraSettings.getCameraSettings(0);
+    console.timeEnd("getCameraSettings");
 
-  // await sleep(0);
+    console.time("getCameraSettings1");
+    await CameraSettings.getCameraSettings(0);
+    console.timeEnd("getCameraSettings1");
 
-  // console.time("GetCameraSettings2");
-  // await CameraSettings.GetCameraSettings(0);
-  // console.timeEnd("GetCameraSettings2");
+    console.time("setCameraSettings");
+    await CameraSettings.setCameraSettings(0, [
+      { prop: "WhiteBalance", val: 2900, isAuto: true },
+    ]);
+    console.timeEnd("setCameraSettings");
 
-  console.time("SetCameraSettings");
-  await CameraSettings.SetCameraSettings(0, [
-    { prop: "white_balance", val: 2900, isAuto: true },
-  ]);
-  console.timeEnd("SetCameraSettings");
+    // console.log(res1);
+
+    console.time("getCameraResolutions");
+    const res2 = await CameraSettings.getCameraResolutions(0);
+    console.timeEnd("getCameraResolutions");
+
+    console.log(res2);
+  } catch (error) {
+    console.error(error);
+  }
 })();
-
-// console.time("GetCameraSettingsSync");
-// const ss = CameraSettings.GetCameraSettingsSync(0);
-// console.timeEnd("GetCameraSettingsSync");
-
-// // console.log(ss);
-// console.log(ss.length);
-
-// console.time("SetCameraSettingsSync");
-// CameraSettings.SetCameraSettingsSync(0, [
-//   { prop: "white_balance", val: 2900, isAuto: true },
-// ]);
-// console.timeEnd("SetCameraSettingsSync");

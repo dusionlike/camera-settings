@@ -3,11 +3,13 @@
 #define CAMERA_SETTINGS_BASE_H
 
 #include <iostream>
+#include <map>
 #include <vector>
+#include <string>
 
 struct CameraSetting
 {
-  long prop;
+  std::string prop;
   long min;
   long max;
   long val;
@@ -15,42 +17,43 @@ struct CameraSetting
   long def;
   /** rangeFlags & 1 Auto; rangeFlags & 2 Auto Manual */
   long rangeFlags;
-  /** 1 Auto 2 Manual */
-  long flags;
-  long type;
+  bool isAuto;
+  std::string ctrlType;
 };
 
 struct CameraSettingSetter
 {
-  long prop;
+  std::string prop;
   long val;
-  /** 1 Auto 2 Manual */
-  long flags;
+  bool isAuto;
+};
+
+struct Resolution
+{
+  int width;
+  int height;
+  std::string type;
 };
 
 /**
  * Get camera settings by camera name
  * @param wszName camera name
  */
-std::vector<CameraSetting> GetCameraSettings(const wchar_t *wszName);
-
-/**
- * Get camera settings by camera index
- * @param cameraIndex camera index
- */
-std::vector<CameraSetting> GetCameraSettings(int cameraIndex);
+std::vector<CameraSetting> GetCameraSettings(const wchar_t *wszName, int index);
 
 /**
  * Set camera settings by camera name
  * @param wszName camera name
  * @param settings camera settings
  */
-void SetCameraSettings(const wchar_t *wszName, const std::vector<CameraSettingSetter> &settings);
+void SetCameraSettings(const wchar_t *wszName, int index, const std::vector<CameraSettingSetter> &settings);
 
 /**
  * Set camera settings by camera index
  * @param cameraIndex camera index
-*/
+ */
 void SetCameraSettings(int cameraIndex, const std::vector<CameraSettingSetter> &settings);
+
+std::vector<Resolution> GetCameraResolutions(const wchar_t *wszName, int index);
 
 #endif

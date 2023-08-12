@@ -8,13 +8,13 @@
  * focus 焦距
  */
 export type TagCameraControlProperty =
-  | "pan"
-  | "tilt"
-  | "roll"
-  | "zoom"
-  | "exposure"
-  | "iris"
-  | "focus";
+  | "Pan"
+  | "Tilt"
+  | "Roll"
+  | "Zoom"
+  | "Exposure"
+  | "Iris"
+  | "Focus";
 
 /**
  * brightness 亮度
@@ -29,16 +29,16 @@ export type TagCameraControlProperty =
  * gain 增益
  */
 export type TagVideoProcAmpProperty =
-  | "brightness"
-  | "contrast"
-  | "hue"
-  | "saturation"
-  | "sharpness"
-  | "gamma"
-  | "color_enable"
-  | "white_balance"
-  | "backlight_compensation"
-  | "gain";
+  | "Brightness"
+  | "Contrast"
+  | "Hue"
+  | "Saturation"
+  | "Sharpness"
+  | "Gamma"
+  | "ColorEnable"
+  | "WhiteBalance"
+  | "BacklightCompensation"
+  | "Gain";
 
 export interface CameraSettingSetter {
   prop: TagCameraControlProperty | TagVideoProcAmpProperty;
@@ -51,23 +51,25 @@ export interface CameraSetting extends CameraSettingSetter {
   max: number;
   step: number;
   /** rangeFlags & 1 Auto; rangeFlags & 2 Auto Manual */
-  rangeFlags: boolean;
+  rangeFlags: number;
   def: number;
   ctrlType: "video" | "camera";
 }
 
-export function GetCameraSettingsSync(cameraName: string | number): CameraSetting[];
+export interface Resolution {
+  width: number;
+  height: number;
+}
 
-export function SetCameraSettingsSync(
-  cameraName: string | number,
-  settings: CameraSettingSetter[]
-): void;
-
-export function GetCameraSettings(
+export function getCameraSettings(
   cameraName: string | number
 ): Promise<CameraSetting[]>;
 
-export function SetCameraSettings(
+export function setCameraSettings(
   cameraName: string | number,
   settings: CameraSettingSetter[]
 ): Promise<void>;
+
+export function getCameraResolutions(
+  cameraName: string | number
+): Promise<Resolution[]>;
