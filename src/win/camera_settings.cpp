@@ -2,8 +2,6 @@
 #include <dshow.h>
 #include "camera_settings_base.h"
 
-std::vector<Resolution> GetAvailableCameraResolutions(IBaseFilter *pFilter);
-
 std::map<int, std::string> propMapVideo = {
     {VideoProcAmp_Brightness, "Brightness"},
     {VideoProcAmp_Contrast, "Contrast"},
