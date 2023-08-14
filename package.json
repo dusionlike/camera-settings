@@ -1,6 +1,6 @@
 {
   "name": "camera-settings",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Modify the configuration of the usb camera, support windows and linux, support electron",
   "main": "index.js",
   "types": "index.d.ts",
@@ -27,8 +27,14 @@
     "dshow",
     "v4l2"
   ],
-  "author": "dusionlike",
   "license": "MIT",
+  "homepage": "https://github.com/dusionlike/camera-settings#readme",
+  "bugs": "https://github.com/dusionlike/camera-settings/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dusionlike/electron-builder-encryptor.git"
+  },
+  "author": "dusionlike",
   "dependencies": {
     "bindings": "^1.5.0"
   },
