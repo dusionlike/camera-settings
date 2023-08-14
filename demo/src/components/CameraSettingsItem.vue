@@ -1,18 +1,18 @@
 <script lang="ts" setup>
-import type { CameraSetting } from "@ft/client-api";
+import type { CameraSettingInfo } from "camera-settings";
 import { settingNameMap } from "../utils";
 
 const props = defineProps<{
   title: string;
-  settings: CameraSetting[];
+  settings: CameraSettingInfo[];
 }>();
 
 const emit = defineEmits<{
-  (event: "change", val: CameraSetting[]): void;
+  (event: "change", val: CameraSettingInfo[]): void;
 }>();
 
 function changeToDef() {
-  const shuldChangeList: CameraSetting[] = [];
+  const shuldChangeList: CameraSettingInfo[] = [];
   for (const setting of props.settings) {
     if (setting.val !== setting.def) {
       setting.val = setting.def;

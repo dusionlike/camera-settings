@@ -4,6 +4,7 @@
       "target_name": "camera-settings",
       "sources": [ 
         "src/index.cpp",
+        "src/settings_promise_worker.hpp",
         "src/get_settings.hpp",
         "src/set_settings.hpp",
         "src/get_resolution.hpp"

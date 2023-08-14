@@ -1,70 +1,33 @@
 #include <napi.h>
 #include "camera_settings_base.h"
+#include "settings_promise_worker.hpp"
 
 Napi::Object GetSetting(Napi::Env env, CameraSetting setting);
 
-class GetSettingsWorker : public Napi::AsyncWorker
+class GetSettingsWorker : public SettingsPromiseWorker
 {
 public:
   GetSettingsWorker(const Napi::Env &env, std::wstring wCameraName, int index)
-      : Napi::AsyncWorker{env, "GetSettingsWorker"},
-        m_deferred{env},
-        m_wCameraName(wCameraName),
-        m_index{index} {}
+      : SettingsPromiseWorker{env, "GetSettingsWorker", wCameraName, index} {}
 
-  ~GetSettingsWorker()
+  void Execute2()
   {
+    m_settings = GetCameraSettings(m_wCameraName.c_str(), m_index);
   }
 
-  Napi::Promise Promise()
+  void OnOK2()
   {
-    return m_deferred.Promise();
+    Napi::Env env = Env();
+    Napi::Array arr = Napi::Array::New(env, m_settings.size());
+    for (size_t i = 0; i < m_settings.size(); i++)
+    {
+      arr.Set(i, GetSetting(env, m_settings[i]));
+    }
+    m_deferred.Resolve(arr);
   }
-
-  void Execute()
-  {
-    try
-    {
-      m_settings = GetCameraSettings(m_wCameraName.c_str(), m_index);
-    }
-    catch (const std::exception &e)
-    {
-      errorMsg = e.what();
-    }
-  }
-
-  void OnOK()
-  {
-    if (!errorMsg.empty())
-    {
-      m_deferred.Reject(Napi::String::New(Env(), errorMsg));
-      return;
-    }
-
-    try
-    {
-      Napi::Env env = Env();
-      Napi::Array arr = Napi::Array::New(env, m_settings.size());
-      for (size_t i = 0; i < m_settings.size(); i++)
-      {
-        arr.Set(i, GetSetting(env, m_settings[i]));
-      }
-      m_deferred.Resolve(arr);
-    }
-    catch (const std::exception &e)
-    {
-      m_deferred.Reject(Napi::String::New(Env(), e.what()));
-    }
-  }
-
-  void OnError(const Napi::Error &err) { m_deferred.Reject(err.Value()); }
 
 private:
-  Napi::Promise::Deferred m_deferred;
-  std::wstring m_wCameraName;
-  int m_index;
   std::vector<CameraSetting> m_settings;
-  std::string errorMsg;
 };
 
 Napi::Object GetSetting(Napi::Env env, CameraSetting setting)

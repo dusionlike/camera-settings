@@ -4,17 +4,18 @@ import { cameraId } from "../store";
 import { onMounted } from "vue";
 import CameraSettingsItem from "./CameraSettingsItem.vue";
 import { ElDialog } from "element-plus";
-import {
-  type CameraSetting,
-  getCameraSettings,
-  setCameraSettings,
-} from "camera-settings";
+import { type CameraSettingInfo, CameraSettings } from "camera-settings";
+import { onBeforeUnmount } from "vue";
 
-const videoSettings = ref<CameraSetting[]>([]);
-const cameraSettings = ref<CameraSetting[]>([]);
+let cs: CameraSettings | null = null;
+
+const videoSettings = ref<CameraSettingInfo[]>([]);
+const cameraSettings = ref<CameraSettingInfo[]>([]);
 
 async function init() {
-  const settings = await getCameraSettings(cameraId.value);
+  cs = new CameraSettings(cameraId.value);
+  await cs.open();
+  const settings = await cs.getSettings();
   videoSettings.value = settings.filter((s) => s.ctrlType === "video");
   cameraSettings.value = settings.filter((s) => s.ctrlType === "camera");
 }
@@ -23,10 +24,14 @@ onMounted(() => {
   init();
 });
 
-async function changeSetting(settings: CameraSetting[]) {
+onBeforeUnmount(() => {
+  cs?.close();
+  cs = null;
+});
+
+async function changeSetting(settings: CameraSettingInfo[]) {
   try {
-    await setCameraSettings(
-      cameraId.value,
+    cs?.setSettings(
       settings.map((setting) => ({
         prop: setting.prop,
         val: setting.val,

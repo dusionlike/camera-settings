@@ -1,20 +1,26 @@
 // @ts-check
-const CameraSettings = require("../");
+const { CameraSettings } = require("../");
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 (async () => {
   try {
+    const cs = new CameraSettings(0);
+
+    await cs.open();
+
     console.time("getCameraSettings");
-    const res1 = await CameraSettings.getCameraSettings(0);
+    const res1 = await cs.getSettings();
     console.timeEnd("getCameraSettings");
 
-    console.time("getCameraSettings1");
-    await CameraSettings.getCameraSettings(0);
-    console.timeEnd("getCameraSettings1");
+    console.time("getCameraSettings2");
+    const res3 = await cs.getSettings();
+    console.timeEnd("getCameraSettings2");
+
+    // console.log(res3);
 
     console.time("setCameraSettings");
-    await CameraSettings.setCameraSettings(0, [
+    await cs.setSettings([
       { prop: "WhiteBalance", val: 2900, isAuto: true },
     ]);
     console.timeEnd("setCameraSettings");
@@ -22,10 +28,12 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     // console.log(res1);
 
     console.time("getCameraResolutions");
-    const res2 = await CameraSettings.getCameraResolutions(0);
+    const res2 = await cs.getResolutions();
     console.timeEnd("getCameraResolutions");
 
-    console.log(res2);
+    // console.log(res2);
+
+    await cs.close();
   } catch (error) {
     console.error(error);
   }

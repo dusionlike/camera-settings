@@ -40,13 +40,13 @@ export type TagVideoProcAmpProperty =
   | "BacklightCompensation"
   | "Gain";
 
-export interface CameraSettingSetter {
+export interface CameraSettingSetInfo {
   prop: TagCameraControlProperty | TagVideoProcAmpProperty;
   val: number;
   isAuto?: boolean;
 }
 
-export interface CameraSetting extends CameraSettingSetter {
+export interface CameraSettingInfo extends CameraSettingSetInfo {
   min: number;
   max: number;
   step: number;
@@ -61,15 +61,27 @@ export interface Resolution {
   height: number;
 }
 
+export function openCameraSettings(cameraName: string | number): Promise<void>;
+export function closeCameraSettings(cameraName: string | number): Promise<void>;
+
 export function getCameraSettings(
   cameraName: string | number
-): Promise<CameraSetting[]>;
+): Promise<CameraSettingInfo[]>;
 
 export function setCameraSettings(
   cameraName: string | number,
-  settings: CameraSettingSetter[]
+  settings: CameraSettingSetInfo[]
 ): Promise<void>;
 
 export function getCameraResolutions(
   cameraName: string | number
 ): Promise<Resolution[]>;
+
+export class CameraSettings {
+  constructor(cameraName: string | number);
+  open(): Promise<void>;
+  close(): Promise<void>;
+  getSettings(): Promise<CameraSettingInfo[]>;
+  setSettings(settings: CameraSettingSetInfo[]): Promise<void>;
+  getResolutions(): Promise<Resolution[]>;
+} 

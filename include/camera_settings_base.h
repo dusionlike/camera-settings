@@ -35,6 +35,9 @@ struct Resolution
   std::string type;
 };
 
+void OpenCameraSettings(const wchar_t *wszName, int index);
+void CloseCameraSettings(const wchar_t *wszName, int index);
+
 /**
  * Get camera settings by camera name
  * @param wszName camera name

@@ -75,6 +75,10 @@
     "xloctime": "cpp",
     "map": "cpp",
     "xtree": "cpp",
-    "set": "cpp"
+    "set": "cpp",
+    "charconv": "cpp",
+    "format": "cpp",
+    "forward_list": "cpp",
+    "iomanip": "cpp"
   }
 }

@@ -2,6 +2,8 @@
 #include <dshow.h>
 #include "camera_settings_base.h"
 
+HRESULT QueryIBaseFilter(const wchar_t *wszName, int index, IBaseFilter **ppVideoCaptureFilter);
+
 std::map<int, std::string> propMapVideo = {
     {VideoProcAmp_Brightness, "Brightness"},
     {VideoProcAmp_Contrast, "Contrast"},
@@ -46,10 +48,95 @@ std::map<std::string, int> propMapCameraReverse = {
     {"Focus", CameraControl_Focus},
 };
 
+class IBaseFilterMap
+{
+public:
+  void Set(const wchar_t *wszName, int index, IBaseFilter *pVideoCaptureFilter)
+  {
+    if (index == -1)
+    {
+      iBaseFilterNameMap[std::wstring(wszName)] = pVideoCaptureFilter;
+    }
+    else
+    {
+      iBaseFilterIndexMap[index] = pVideoCaptureFilter;
+    }
+  }
+
+  IBaseFilter *Get(const wchar_t *wszName, int index)
+  {
+    if (index == -1)
+    {
+      return iBaseFilterNameMap[std::wstring(wszName)];
+    }
+    else
+    {
+      return iBaseFilterIndexMap[index];
+    }
+  }
+
+  bool Has(const wchar_t *wszName, int index)
+  {
+    if (index == -1)
+    {
+      return iBaseFilterNameMap.find(std::wstring(wszName)) != iBaseFilterNameMap.end();
+    }
+    else
+    {
+      return iBaseFilterIndexMap.find(index) != iBaseFilterIndexMap.end();
+    }
+  }
+
+  void Delete(const wchar_t *wszName, int index)
+  {
+    if (index == -1)
+    {
+      iBaseFilterNameMap.erase(std::wstring(wszName));
+    }
+    else
+    {
+      iBaseFilterIndexMap.erase(index);
+    }
+  }
+
+private:
+  std::map<std::wstring, IBaseFilter *> iBaseFilterNameMap;
+  std::map<int, IBaseFilter *> iBaseFilterIndexMap;
+} IFM;
+
+void OpenCameraSettings(const wchar_t *wszName, int index)
+{
+  CoInitialize(NULL);
+
+  IBaseFilter *pVideoCaptureFilter = NULL;
+  HRESULT hr = QueryIBaseFilter(wszName, index, &pVideoCaptureFilter);
+
+  CoUninitialize();
+
+  if (FAILED(hr))
+  {
+    throw std::runtime_error("Failed to query device");
+  }
+}
+
+void CloseCameraSettings(const wchar_t *wszName, int index)
+{
+  if (IFM.Has(wszName, index))
+  {
+    CoInitialize(NULL);
+
+    IBaseFilter *pVideoCaptureFilter = IFM.Get(wszName, index);
+    pVideoCaptureFilter->Release();
+    IFM.Delete(wszName, index);
+
+    CoUninitialize();
+  }
+}
+
 /**
  * Query IAMCameraControl by camera name
  */
-HRESULT QueryIBaseFilter(const WCHAR *wszName, int index, IBaseFilter **ppVideoCaptureFilter)
+HRESULT QueryIBaseFilter(const wchar_t *wszName, int index, IBaseFilter **ppVideoCaptureFilter)
 {
   // create system device enumerator
   ICreateDevEnum *pCreateDevEnum = NULL;
@@ -105,6 +192,8 @@ HRESULT QueryIBaseFilter(const WCHAR *wszName, int index, IBaseFilter **ppVideoC
         continue;
       }
 
+      IFM.Set(wszName, index, *ppVideoCaptureFilter);
+
       // release resources
       VariantClear(&varName);
       pPropertyBag->Release();
@@ -131,21 +220,30 @@ HRESULT QueryIBaseFilter(const WCHAR *wszName, int index, IBaseFilter **ppVideoC
 /**
  * Query IAMCameraControl by camera name
  */
-HRESULT QueryAllInterface(const WCHAR *wszName, int index, IAMVideoProcAmp **ppProcAmp, IAMCameraControl **ppCameraControl)
+HRESULT QueryAllInterface(const wchar_t *wszName, int index, IAMVideoProcAmp **ppProcAmp, IAMCameraControl **ppCameraControl)
 {
+  HRESULT hr;
   // create video capture filter
   IBaseFilter *pVideoCaptureFilter = NULL;
-  HRESULT hr = QueryIBaseFilter(wszName, index, &pVideoCaptureFilter);
-  if (FAILED(hr))
+
+  if (IFM.Has(wszName, index))
   {
-    return E_FAIL;
+    pVideoCaptureFilter = IFM.Get(wszName, index);
+  }
+  else
+  {
+    hr = QueryIBaseFilter(wszName, index, &pVideoCaptureFilter);
+    if (FAILED(hr))
+    {
+      return E_FAIL;
+    }
   }
 
   // get IAMCameraControl interface
   hr = pVideoCaptureFilter->QueryInterface(IID_IAMCameraControl, (void **)ppCameraControl);
   if (FAILED(hr))
   {
-    pVideoCaptureFilter->Release();
+    // pVideoCaptureFilter->Release();
     return E_FAIL;
   }
 
@@ -153,10 +251,10 @@ HRESULT QueryAllInterface(const WCHAR *wszName, int index, IAMVideoProcAmp **ppP
   hr = pVideoCaptureFilter->QueryInterface(IID_IAMVideoProcAmp, (void **)ppProcAmp);
   if (FAILED(hr))
   {
-    pVideoCaptureFilter->Release();
+    // pVideoCaptureFilter->Release();
     return E_FAIL;
   }
-  pVideoCaptureFilter->Release();
+  // pVideoCaptureFilter->Release();
   return S_OK;
 }
 
@@ -245,7 +343,7 @@ std::vector<CameraSetting> GetCameraSettings(const wchar_t *wszName, int index)
   return settings;
 }
 
-void SetCameraSettings(const WCHAR *wszName, int index, const std::vector<CameraSettingSetter> &settings)
+void SetCameraSettings(const wchar_t *wszName, int index, const std::vector<CameraSettingSetter> &settings)
 {
   CoInitialize(NULL);
 
@@ -302,14 +400,23 @@ std::vector<Resolution> GetCameraResolutions(const wchar_t *wszName, int index)
 {
   CoInitialize(NULL);
 
+  HRESULT hr;
   // create video capture filter
   IBaseFilter *pVideoCaptureFilter = NULL;
-  HRESULT hr = QueryIBaseFilter(wszName, index, &pVideoCaptureFilter);
-  if (FAILED(hr))
+  if (IFM.Has(wszName, index))
   {
-    CoUninitialize();
-    throw std::runtime_error("Failed to query device");
+    pVideoCaptureFilter = IFM.Get(wszName, index);
   }
+  else
+  {
+    hr = QueryIBaseFilter(wszName, index, &pVideoCaptureFilter);
+    if (FAILED(hr))
+    {
+      CoUninitialize();
+      throw std::runtime_error("Failed to query device");
+    }
+  }
+
   std::vector<Resolution> resolutions;
 
   IEnumPins *pEnum = NULL;
@@ -370,7 +477,7 @@ std::vector<Resolution> GetCameraResolutions(const wchar_t *wszName, int index)
   }
 
   pEnum->Release();
-  pVideoCaptureFilter->Release();
+  // pVideoCaptureFilter->Release();
 
   CoUninitialize();
 

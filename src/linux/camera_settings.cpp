@@ -73,6 +73,14 @@ std::map<std::string, int> propMapReverse = {
     {"Focus", V4L2_CID_FOCUS_ABSOLUTE},
 };
 
+void OpenCameraSettings(const wchar_t *wszName, int index)
+{
+}
+
+void CloseCameraSettings(const wchar_t *wszName, int index)
+{
+}
+
 int queryVideoFdByIndex(int &index)
 {
   char devName[32];

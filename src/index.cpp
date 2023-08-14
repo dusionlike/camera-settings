@@ -2,6 +2,8 @@
 #include "get_settings.hpp"
 #include "set_settings.hpp"
 #include "get_resolution.hpp"
+#include "open_camera.hpp"
+#include "close_camera.hpp"
 
 void QueryJsParams(const Napi::CallbackInfo &info, std::wstring &wCameraName, int &camIndex)
 {
@@ -70,8 +72,32 @@ Napi::Value N_GetCameraResolutions(const Napi::CallbackInfo &info)
   return worker->Promise();
 }
 
+Napi::Value N_OpenCameraSettings(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  std::wstring wCameraName = L"";
+  int camIndex = -1;
+  QueryJsParams(info, wCameraName, camIndex);
+  OpenSettingsWorker *worker = new OpenSettingsWorker(env, wCameraName.c_str(), camIndex);
+  worker->Queue();
+  return worker->Promise();
+}
+
+Napi::Value N_CloseCameraSettings(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  std::wstring wCameraName = L"";
+  int camIndex = -1;
+  QueryJsParams(info, wCameraName, camIndex);
+  CloseSettingsWorker *worker = new CloseSettingsWorker(env, wCameraName.c_str(), camIndex);
+  worker->Queue();
+  return worker->Promise();
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
+  exports["openCameraSettings"] = Napi::Function::New(env, N_OpenCameraSettings);
+  exports["closeCameraSettings"] = Napi::Function::New(env, N_CloseCameraSettings);
   exports["getCameraSettings"] = Napi::Function::New(env, N_GetCameraSettings);
   exports["setCameraSettings"] = Napi::Function::New(env, N_SetCameraSettings);
   exports["getCameraResolutions"] = Napi::Function::New(env, N_GetCameraResolutions);
