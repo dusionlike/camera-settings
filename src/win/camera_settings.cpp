@@ -174,6 +174,7 @@ std::vector<CameraSetting> GetCameraSettings(const wchar_t *wszName, int index)
   HRESULT hr = QueryAllInterface(wszName, index, &pProcAmp, &pCameraControl);
   if (FAILED(hr))
   {
+    CoUninitialize();
     throw std::runtime_error("Failed to query device");
   }
   else
@@ -255,6 +256,7 @@ void SetCameraSettings(const WCHAR *wszName, int index, const std::vector<Camera
   HRESULT hr = QueryAllInterface(wszName, index, &pProcAmp, &pCameraControl);
   if (FAILED(hr))
   {
+    CoUninitialize();
     throw std::runtime_error("Failed to query device");
   }
   else
@@ -285,6 +287,9 @@ void SetCameraSettings(const WCHAR *wszName, int index, const std::vector<Camera
       }
       else
       {
+        pProcAmp->Release();
+        pCameraControl->Release();
+        CoUninitialize();
         throw std::runtime_error("Invalid prop");
       }
     }
@@ -304,6 +309,7 @@ std::vector<Resolution> GetCameraResolutions(const wchar_t *wszName, int index)
   HRESULT hr = QueryIBaseFilter(wszName, index, &pVideoCaptureFilter);
   if (FAILED(hr))
   {
+    CoUninitialize();
     throw std::runtime_error("Failed to query device");
   }
   std::vector<Resolution> resolutions;
@@ -313,6 +319,8 @@ std::vector<Resolution> GetCameraResolutions(const wchar_t *wszName, int index)
   hr = pVideoCaptureFilter->EnumPins(&pEnum);
   if (FAILED(hr))
   {
+    pVideoCaptureFilter->Release();
+    CoUninitialize();
     throw std::runtime_error("Failed to enumerate pins");
   }
 
@@ -364,6 +372,7 @@ std::vector<Resolution> GetCameraResolutions(const wchar_t *wszName, int index)
   }
 
   pEnum->Release();
+  pVideoCaptureFilter->Release();
 
   CoUninitialize();
 
