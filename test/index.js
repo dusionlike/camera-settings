@@ -1,5 +1,5 @@
 // @ts-check
-const { CameraSettings } = require("../");
+const { CameraSettings, _getCacheCount } = require("../");
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -32,8 +32,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     console.timeEnd("getCameraResolutions");
 
     // console.log(res2);
-
+    console.log("Cache count:", _getCacheCount());
     await cs.close();
+    console.log("Cache count:", _getCacheCount());
   } catch (error) {
     console.error(error);
   }

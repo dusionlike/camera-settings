@@ -35,6 +35,7 @@ struct Resolution
   std::string type;
 };
 
+int GetCacheCount();
 void OpenCameraSettings(const wchar_t *wszName, int index);
 void CloseCameraSettings(const wchar_t *wszName, int index);
 
@@ -50,12 +51,6 @@ std::vector<CameraSetting> GetCameraSettings(const wchar_t *wszName, int index);
  * @param settings camera settings
  */
 void SetCameraSettings(const wchar_t *wszName, int index, const std::vector<CameraSettingSetter> &settings);
-
-/**
- * Set camera settings by camera index
- * @param cameraIndex camera index
- */
-void SetCameraSettings(int cameraIndex, const std::vector<CameraSettingSetter> &settings);
 
 std::vector<Resolution> GetCameraResolutions(const wchar_t *wszName, int index);
 

@@ -99,10 +99,19 @@ public:
     }
   }
 
+  int GetCacheCount()
+  {
+    return iBaseFilterNameMap.size() + iBaseFilterIndexMap.size();
+  }
+
 private:
   std::map<std::wstring, IBaseFilter *> iBaseFilterNameMap;
   std::map<int, IBaseFilter *> iBaseFilterIndexMap;
 } IFM;
+
+int GetCacheCount() {
+  return IFM.GetCacheCount();
+}
 
 void OpenCameraSettings(const wchar_t *wszName, int index)
 {

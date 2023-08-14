@@ -73,6 +73,11 @@ std::map<std::string, int> propMapReverse = {
     {"Focus", V4L2_CID_FOCUS_ABSOLUTE},
 };
 
+int GetCacheCount()
+{
+  return 0;
+}
+
 void OpenCameraSettings(const wchar_t *wszName, int index)
 {
 }

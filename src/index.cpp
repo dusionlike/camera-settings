@@ -1,4 +1,5 @@
 ﻿#include <napi.h>
+#include "camera_settings_base.h"
 #include "get_settings.hpp"
 #include "set_settings.hpp"
 #include "get_resolution.hpp"
@@ -94,13 +95,32 @@ Napi::Value N_CloseCameraSettings(const Napi::CallbackInfo &info)
   return worker->Promise();
 }
 
+Napi::Value N_CloseCameraSettingsSync(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  std::wstring wCameraName = L"";
+  int camIndex = -1;
+  QueryJsParams(info, wCameraName, camIndex);
+  CloseCameraSettings(wCameraName.c_str(), camIndex);
+  return env.Undefined();
+}
+
+Napi::Value N_GetCacheCount(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+  int res = GetCacheCount();
+  return Napi::Number::New(env, res);
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
   exports["openCameraSettings"] = Napi::Function::New(env, N_OpenCameraSettings);
   exports["closeCameraSettings"] = Napi::Function::New(env, N_CloseCameraSettings);
+  exports["closeCameraSettingsSync"] = Napi::Function::New(env, N_CloseCameraSettingsSync);
   exports["getCameraSettings"] = Napi::Function::New(env, N_GetCameraSettings);
   exports["setCameraSettings"] = Napi::Function::New(env, N_SetCameraSettings);
   exports["getCameraResolutions"] = Napi::Function::New(env, N_GetCameraResolutions);
+  exports["_getCacheCount"] = Napi::Function::New(env, N_GetCacheCount);
   return exports;
 }
 

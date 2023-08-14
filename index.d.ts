@@ -63,6 +63,7 @@ export interface Resolution {
 
 export function openCameraSettings(cameraName: string | number): Promise<void>;
 export function closeCameraSettings(cameraName: string | number): Promise<void>;
+export function closeCameraSettingsSync(cameraName: string | number): void;
 
 export function getCameraSettings(
   cameraName: string | number
@@ -85,3 +86,5 @@ export class CameraSettings {
   setSettings(settings: CameraSettingSetInfo[]): Promise<void>;
   getResolutions(): Promise<Resolution[]>;
 } 
+
+export function _getCacheCount(): number;
