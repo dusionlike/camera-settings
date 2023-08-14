@@ -1,10 +1,14 @@
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { cameraId, loading, resolutions } from "../store";
 import { onMounted } from "vue";
 import CameraSettingsItem from "./CameraSettingsItem.vue";
 import { ElDialog } from "element-plus";
-import { type CameraSettingInfo, CameraSettings, _getCacheCount } from "camera-settings";
+import {
+  type CameraSettingInfo,
+  CameraSettings,
+  _getCacheCount,
+} from "camera-settings";
 import { onBeforeUnmount } from "vue";
 
 let cs: CameraSettings | null = null;
@@ -23,6 +27,10 @@ async function init() {
   resolutions.value = await cs.getResolutions();
   loading.value = false;
 }
+
+watch(cameraId, () => {
+  init();
+});
 
 onMounted(() => {
   init();

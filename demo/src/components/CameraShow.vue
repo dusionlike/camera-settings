@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import { onMounted } from "vue";
 import { ref } from "vue";
-import { cameraId } from "../store";
+import { cameraId, resolutions } from "../store";
+import { watch } from "vue";
+import { computed } from "vue";
 
 const videoRef = ref<HTMLVideoElement>();
 
@@ -38,9 +40,16 @@ async function openCapture() {
   if (stream) {
     closeCapture();
   }
+
+  const resolution = selectedResolution.value.split("x").map((s) => +s);
+
   const camera = cameraList.value[cameraId.value];
   stream = await navigator.mediaDevices.getUserMedia({
-    video: { deviceId: camera.deviceId },
+    video: {
+      deviceId: camera.deviceId,
+      width: resolution[0],
+      height: resolution[1],
+    },
   });
   isOpen.value = true;
   videoRef.value.srcObject = stream;
@@ -51,6 +60,18 @@ function closeCapture() {
   stream = null;
   isOpen.value = false;
 }
+
+const resolutionsEx = computed(() => {
+  const rr = resolutions.value.map((r) => `${r.width}x${r.height}`);
+  return Array.from(new Set(rr));
+});
+
+const selectedResolution = ref("640x480");
+watch(selectedResolution, () => {
+  if (isOpen.value) {
+    openCapture();
+  }
+});
 </script>
 
 <template>
@@ -69,6 +90,16 @@ function closeCapture() {
             :key="camera.deviceId"
             :label="camera.label"
             :value="index"
+          ></ElOption>
+        </ElSelect>
+      </div>
+      <div class="ctrl-left">
+        <ElSelect v-model="selectedResolution" placeholder="请选择分辨率">
+          <ElOption
+            v-for="resolution in resolutionsEx"
+            :key="resolution"
+            :label="resolution"
+            :value="resolution"
           ></ElOption>
         </ElSelect>
       </div>

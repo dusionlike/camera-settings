@@ -59,6 +59,7 @@ export interface CameraSettingInfo extends CameraSettingSetInfo {
 export interface Resolution {
   width: number;
   height: number;
+  type: string;
 }
 
 export function openCameraSettings(cameraName: string | number): Promise<void>;
