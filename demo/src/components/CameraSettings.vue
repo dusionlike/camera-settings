@@ -18,6 +18,9 @@ const cameraSettings = ref<CameraSettingInfo[]>([]);
 
 async function init() {
   loading.value = true;
+  if (cs) {
+    await cs.close();
+  }
   console.log("Cache count:", _getCacheCount());
   cs = new CameraSettings(cameraId.value);
   await cs.open();
