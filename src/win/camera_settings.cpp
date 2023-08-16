@@ -91,13 +91,10 @@ public:
   {
     if (index == -1)
     {
-      std::wstring wstr(wszName);
-      iBaseFilterNameMap[std::wstring(wszName)]->Release();
-      iBaseFilterNameMap.erase(wstr);
+      iBaseFilterNameMap.erase(std::wstring(wszName));
     }
     else
     {
-      iBaseFilterIndexMap[index]->Release();
       iBaseFilterIndexMap.erase(index);
     }
   }
