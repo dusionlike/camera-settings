@@ -6,7 +6,7 @@ class OpenSettingsWorker : public SettingsPromiseWorker
 {
 public:
   OpenSettingsWorker(const Napi::Env &env, std::wstring wCameraName, int index)
-      : SettingsPromiseWorker{env, "GetSettingsWorker", wCameraName, index} {}
+      : SettingsPromiseWorker{env, "OpenSettingsWorker", wCameraName, index} {}
 
   void Execute2()
   {

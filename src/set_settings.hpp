@@ -6,7 +6,7 @@ class SetSettingsWorker : public SettingsPromiseWorker
 {
 public:
   SetSettingsWorker(const Napi::Env &env, std::wstring wCameraName, int index, const std::vector<CameraSettingSetter> &settings)
-      : SettingsPromiseWorker{env, "GetSettingsWorker", wCameraName, index},
+      : SettingsPromiseWorker{env, "SetSettingsWorker", wCameraName, index},
       m_settings{settings} {}
 
   void Execute2()

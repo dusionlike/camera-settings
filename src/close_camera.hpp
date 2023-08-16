@@ -6,7 +6,7 @@ class CloseSettingsWorker : public SettingsPromiseWorker
 {
 public:
   CloseSettingsWorker(const Napi::Env &env, std::wstring wCameraName, int index)
-      : SettingsPromiseWorker{env, "GetSettingsWorker", wCameraName, index} {}
+      : SettingsPromiseWorker{env, "CloseSettingsWorker", wCameraName, index} {}
 
   void Execute2()
   {

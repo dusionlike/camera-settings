@@ -8,7 +8,7 @@ class GetResolutionsWorker : public SettingsPromiseWorker
 {
 public:
   GetResolutionsWorker(const Napi::Env &env, std::wstring wCameraName, int index)
-      : SettingsPromiseWorker{env, "GetSettingsWorker", wCameraName, index} {}
+      : SettingsPromiseWorker{env, "GetResolutionsWorker", wCameraName, index} {}
 
   void Execute2()
   {
