@@ -36,9 +36,7 @@
   },
   "author": "dusionlike",
   "dependencies": {
-    "bindings": "^1.5.0"
-  },
-  "devDependencies": {
+    "bindings": "^1.5.0",
     "node-addon-api": "^7.0.0"
   }
 }
