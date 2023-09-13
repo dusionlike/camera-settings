@@ -1,6 +1,6 @@
 {
   "name": "camera-settings",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Modify the configuration of the usb camera, support windows and linux, support electron",
   "main": "index.js",
   "types": "index.d.ts",
